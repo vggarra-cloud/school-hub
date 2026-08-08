@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Hub</title>
+
+    <style>
+        body{
+            margin:0;
+            background:#f6f7fb;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            display:flex;
+            justify-content:center;
+            padding:40px;
+        }
+
+        .phone{
+            width:420px;
+            background:white;
+            border-radius:28px;
+            padding:28px;
+            box-shadow:0 15px 40px rgba(0,0,0,.12);
+        }
+
+        h1{
+            margin:0;
+            font-size:36px;
+        }
+
+        .welcome{
+            color:#666;
+            margin-top:8px;
+            margin-bottom:30px;
+        }
+
+        .card{
+            border-radius:22px;
+            padding:22px;
+            margin-bottom:18px;
+        }
+
+        .eddie{
+            background:#EAF8B8;
+        }
+
+        .elena{
+            background:#EBDFFF;
+        }
+
+        .bus{
+            background:#DFF5FF;
+        }
+
+        h2{
+            margin:0 0 12px 0;
+        }
+
+        p{
+            margin:6px 0;
+            font-size:18px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="phone">
+
+<h1>📚 School Hub</h1>
+
+<p class="welcome" id="welcomeMessage">
+Loading...
+</p>
+
+<div class="card eddie">
+
+<h2>💛 Eddie</h2>
+
+<p>Building dashboard...</p>
+
+</div>
+
+<div class="card elena">
+
+<h2>💜 Elena</h2>
+
+<p>Building dashboard...</p>
+
+</div>
+
+<div class="card bus">
+
+<h2>📅 Today</h2>
+
+<p id="todayCard">
+Loading today's information...
+</p>
+
+</div>
+
+</div>
+<script src="calendar.js"></script>
+<script src="resource.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
