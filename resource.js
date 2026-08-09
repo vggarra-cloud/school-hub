@@ -169,24 +169,188 @@ const ELENA_RESOURCE_ROTATION = {
     D: "Learning Lab",
     E: "Art"
 };
+const ELENA_RESOURCE_TEACHER = {
+    "Music": "Mr. Herron",
+    "PE": "Coach Hollister",
+    "Media Center": "Mrs. Snyder",
+    "Learning Lab": "Ms. Grossholz",
+    "Art": "Ms. Counts-Cacchione"
+};
 
 const ELENA_SCHEDULE = [
-    { start: "8:05 AM", end: "8:25 AM", className: "Morning Procedures" },
-    { start: "8:25 AM", end: "8:40 AM", className: "Teacher Lead PE" },
-    { start: "8:40 AM", end: "9:10 AM", className: "Intervention Block" },
-    { start: "9:10 AM", end: "10:50 AM", className: "Math & Science Block" },
-    { start: "10:50 AM", end: "10:55 AM", className: "Switch" },
-    { start: "10:55 AM", end: "11:25 AM", className: "Lunch" },
-    { start: "11:30 AM", end: "11:50 AM", className: "Recess" },
-    { start: "11:55 AM", end: "12:25 PM", className: "Intervention Block" },
-    { start: "12:25 PM", end: "1:55 PM", className: "ELA & Social Studies Block" },
-    { start: "2:00 PM", end: "2:40 PM", className: "Resource" },
-    { start: "2:45 PM", end: "2:50 PM", className: "Dismissal Procedures" }
+    {
+        start: "8:05 AM",
+        end: "8:25 AM",
+        className: "Morning Procedures",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "8:25 AM",
+        end: "8:40 AM",
+        className: "Teacher Lead PE",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "8:40 AM",
+        end: "9:10 AM",
+        className: "Intervention Block 1",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "9:10 AM",
+        end: "10:50 AM",
+        className: "Math & Science",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "10:50 AM",
+        end: "10:55 AM",
+        className: "Switch",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "10:55 AM",
+        end: "11:25 AM",
+        className: "Lunch",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "11:30 AM",
+        end: "11:50 AM",
+        className: "Recess",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "11:55 AM",
+        end: "12:25 PM",
+        className: "Intervention Block 2",
+        teacher: "Mrs. Thompson",
+        room: "301"
+    },
+    {
+        start: "12:25 PM",
+        end: "1:55 PM",
+        className: "ELA & Social Studies",
+        teacher: "Mrs. Thompson",
+        room: "301"
+    },
+    {
+        start: "2:00 PM",
+        end: "2:40 PM",
+        className: "Resource",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "2:45 PM",
+        end: "2:50 PM",
+        className: "Dismissal Procedures",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    }
 ];
+
+const ELENA_WEDNESDAY_SCHEDULE = [
+    {
+        start: "8:05 AM",
+        end: "8:25 AM",
+        className: "Morning Procedures",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "8:25 AM",
+        end: "8:40 AM",
+        className: "Teacher Lead PE",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "8:40 AM",
+        end: "9:05 AM",
+        className: "Intervention Block 1",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "9:05 AM",
+        end: "10:40 AM",
+        className: "Math & Science",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    },
+    {
+        start: "10:40 AM",
+        end: "10:45 AM",
+        className: "Switch",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "10:45 AM",
+        end: "11:15 AM",
+        className: "Lunch",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "11:20 AM",
+        end: "11:40 AM",
+        className: "Recess",
+        teacher: "",
+        room: ""
+    },
+    {
+        start: "11:45 AM",
+        end: "12:10 PM",
+        className: "Intervention Block 2",
+        teacher: "Mrs. Thompson",
+        room: "301"
+    },
+    {
+        start: "12:10 PM",
+        end: "1:40 PM",
+        className: "ELA & Social Studies",
+        teacher: "Mrs. Thompson",
+        room: "301"
+    },
+    {
+        start: "1:40 PM",
+        end: "1:45 PM",
+        className: "Dismissal Procedures",
+        teacher: "Mrs. Jaffa",
+        room: "307"
+    }
+];
+
+function getElenaSchedule(date) {
+    const day = date ? date.getDay() : new Date().getDay();
+
+    if (day === 3) {
+        return ELENA_WEDNESDAY_SCHEDULE;
+    }
+
+    return ELENA_SCHEDULE;
+}
 
 // Finds what Elena is doing right now
 function getElenaCurrentAndNext(schedule, date) {
-    const currentMinutes =
+const day = date.getDay();
+
+if (day === 0 || day === 6) {
+    return {
+        current: null,
+        next: null
+    };
+}    
+const currentMinutes =
         date.getHours() * 60 + date.getMinutes();
 
     function timeToMinutes(timeString) {
@@ -289,13 +453,13 @@ function isElenaSchoolDay(date, events) {
     return !noSchool;
 }
 
-function getElenaResourceDay(events) {
-    const today = new Date();
+function getElenaResourceDay(events, targetDate) {
+    const target = targetDate ? new Date(targetDate) : new Date();
 
     let schoolDays = 0;
     const currentDate = new Date(ELENA_FIRST_SCHOOL_DAY);
 
-    while (currentDate <= today) {
+    while (currentDate <= target) {
         if (isElenaSchoolDay(currentDate, events)) {
             schoolDays++;
         }

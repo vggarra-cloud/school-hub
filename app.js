@@ -166,6 +166,7 @@ getSchoolCalendar().then(function(calendarText) {
     });
 
     updateTodayCard(events);
+    updateEddieCard(events);
 });
 
 
@@ -173,7 +174,7 @@ getSchoolCalendar().then(function(calendarText) {
 // EDDIE DASHBOARD
 // ==========================================
 
-function updateEddieCard() {
+function updateEddieCard(events) {
     const eddieCard = document.querySelector(".card.eddie");
 
     if (!eddieCard) {
@@ -337,7 +338,8 @@ nextPeriod.end +
         statusHTML =
             "<p><strong>Next:</strong> " +
             nextPeriod.className +
-            nextPeriod.teacher +
+" • " +
+nextPeriod.teacher +
 "<br>" +
 "Room " + nextPeriod.room +
 "<br>" +
@@ -372,11 +374,11 @@ nextPeriod.end +
             "<div>" +
             "<strong>" +
             period.period +
-            "</strong> — " +
+            " — " +
             period.start +
             "–" +
             period.end +
-            "<br>" +
+            "</strong><br>" +
             period.className +
             "<br>" +
             period.teacher +
@@ -386,13 +388,54 @@ nextPeriod.end +
         );
 
     }).join("<br>");
+const dayOfWeek = today.getDay();
+
+const dateString =
+    today.getFullYear().toString() +
+    String(today.getMonth() + 1).padStart(2, "0") +
+    String(today.getDate()).padStart(2, "0");
+
+const dayEvents = (events || []).filter(function(event) {
+    return event.start === dateString;
+});
+
+const noSchoolToday =
+    dayOfWeek === 0 ||
+    dayOfWeek === 6 ||
+    dayEvents.some(function(event) {
+        const title = event.title.toLowerCase();
+        return (
+            title.includes("no school") ||
+            title.includes("holiday") ||
+            title.includes("teacher planning") ||
+            title.includes("teacher workday") ||
+            title.includes("teacher pre-planning") ||
+            title.includes("winter break") ||
+            title.includes("spring break") ||
+            title.includes("thanksgiving break")
+        );
+    });
+
+if (noSchoolToday) {
+    eddieCard.innerHTML =
+        "<h2>Eddie</h2>" +
+        "<p>🏫 <strong>School is not in session</strong></p>" +
+        "<details>" +
+        "<summary>View full schedule</summary>" +
+        "<div style=\"margin-top: 12px;\">" +
+        scheduleHTML +
+        "</div>" +
+        "</details>";
+
+    return;
+}
 
     const scheduleLabel = isWednesday
         ? "Wednesday Early Release"
         : "Regular Schedule";
 
     eddieCard.innerHTML =
-        "<h2>💛 Eddie</h2>" +
+        "<h2>Eddie</h2>" +
         "<p><strong>" +
         dayName +
         "</strong> · 7th Grade</p>" +
@@ -408,7 +451,7 @@ nextPeriod.end +
         "</details>";
 }
 
-updateEddieCard();
+
 
 
 // =====================================================
@@ -477,7 +520,7 @@ function updateElenaCard(events) {
     // Wednesday = early release, no resource
     if (dayOfWeek === 3) {
         elenaCard.innerHTML = `
-            <h2>💜 Elena</h2>
+            <h2>Elena</h2>
             <p><strong>Wednesday Early Release</strong></p>
             <p>🏫 School ends at <strong>1:45 PM</strong></p>
             <p>No Resource Class</p>
@@ -485,9 +528,26 @@ function updateElenaCard(events) {
             <details>
                 <summary>View regular schedule</summary>
                 <div class="schedule-details">
-                    ${getElenaSchedule().map(function(item) {
-                        return `<p><strong>${item.start}–${item.end}</strong> — ${item.className}</p>`;
-                    }).join("")}
+                   ${getElenaSchedule().map(function(item) {
+    let teacherRoom = "";
+
+    if (item.teacher) {
+        teacherRoom += item.teacher;
+    }
+
+    if (item.room) {
+        teacherRoom += " · Room " + item.room;
+    }
+
+    return "<div>" +
+        "<strong>" +
+        item.start + "–" + item.end +
+        "</strong>" +
+        "<br>" +
+        item.className +
+        (teacherRoom ? "<br>" + teacherRoom : "") +
+        "</div>";
+}).join("<br>")}
                 </div>
             </details>
         `;
@@ -506,8 +566,56 @@ if (typeof getElenaResourceDay === "function") {
 
 if (rotationLetter) {
     resource = getElenaResource(rotationLetter);
+
+    if (ELENA_RESOURCE_TEACHER[resource]) {
+        resource += " — " + ELENA_RESOURCE_TEACHER[resource];
+    }
 } else {
-    resource = "Starts Monday — Music (A Day)";
+    let nextSchoolDay = new Date();
+    nextSchoolDay.setDate(nextSchoolDay.getDate() + 1);
+
+    while (!isElenaSchoolDay(nextSchoolDay, events)) {
+        nextSchoolDay.setDate(nextSchoolDay.getDate() + 1);
+    }
+
+const nextResource = getElenaResourceDay(events, nextSchoolDay);
+const nextResourceName = ELENA_RESOURCE_ROTATION[nextResource] || "";
+const nextTeacher = ELENA_RESOURCE_TEACHER[nextResourceName] || "";
+
+    resource =
+        "Starts " +
+        nextSchoolDay.toLocaleDateString("en-US", {
+            weekday: "long"
+        }) +
+        " – " +
+        nextResourceName;
+
+    if (nextTeacher) {
+        resource += " — " + nextTeacher;
+    }
+}
+
+// Weekend — school is not in session
+if (dayOfWeek === 0 || dayOfWeek === 6) {
+    elenaCard.innerHTML = `
+        <h2>Elena</h2>
+        <p>🏫 <strong>School is not in session</strong></p>
+
+        <details>
+            <summary>View full schedule</summary>
+            <div class="schedule-details">
+                ${getElenaSchedule().map(function(item) {
+    return "<div>" +
+    "<strong>" + item.start + " — " + item.end + "</strong><br>" +
+    item.className +
+    (item.teacher ? "<br>" + item.teacher : "") +
+    (item.room ? " • Room " + item.room : "") +
+    "</div>";
+}).join("<br>")}
+            </div>
+        </details>
+    `;
+    return;
 }
 
 const elenaSchedule = getElenaSchedule();
@@ -560,7 +668,7 @@ if (nowInfo.current && nowInfo.next) {
 }
 
 elenaCard.innerHTML = `
-    <h2>💜 Elena</h2>
+    <h2>Elena</h2>
 
     <p><strong>Today's Resource:</strong> ${resource}</p>
 
@@ -570,9 +678,26 @@ elenaCard.innerHTML = `
         <summary>View full schedule</summary>
         <div class="schedule-details">
             ${getElenaSchedule().map(function(item) {
-                return "<p><strong>" + item.start + "–" + item.end +
-                    "</strong> — " + item.className + "</p>";
-            }).join("")}
+    let details = "";
+
+    if (item.teacher) {
+        details += "<br>" + item.teacher;
+    }
+
+    if (item.room) {
+        details += "<br>Room " + item.room;
+    }
+
+    return "<p><strong>" +
+        item.className +
+        "</strong>" +
+        details +
+        "<br>" +
+        item.start +
+        " – " +
+        item.end +
+        "</p>";
+}).join("")}
         </div>
     </details>
 `;
