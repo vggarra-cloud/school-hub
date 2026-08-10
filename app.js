@@ -436,12 +436,6 @@ if (noSchoolToday) {
 
     eddieCard.innerHTML =
         "<h2>Eddie</h2>" +
-        "<p><strong>" +
-        dayName +
-        "</strong> · 7th Grade</p>" +
-        "<p>🕐 " +
-        scheduleLabel +
-        "</p>" +
         statusHTML +
         "<details>" +
         "<summary>View full schedule</summary>" +
@@ -625,22 +619,26 @@ let currentHTML = "";
 
 if (nowInfo.current) {
     currentHTML =
-        "<p><strong>📚 Right now:</strong> " +
-        nowInfo.current.className +
-        "<br>" +
-        nowInfo.current.start +
-        " – " +
-        nowInfo.current.end +
-        "</p>";
+    "<p><strong>📚 Right now:</strong> " +
+    nowInfo.current.className +
+    (nowInfo.current.teacher ? "<br>" + nowInfo.current.teacher : "") +
+    (nowInfo.current.room ? "<br>Room " + nowInfo.current.room : "") +
+    "<br>" +
+    nowInfo.current.start +
+    " – " +
+    nowInfo.current.end +
+    "</p>";
 } else if (nowInfo.next) {
     currentHTML =
-        "<p><strong>📚 Next:</strong> " +
-        nowInfo.next.className +
-        "<br>" +
-        nowInfo.next.start +
-        " – " +
-        nowInfo.next.end +
-        "</p>";
+    "<p><strong>📚 Next:</strong> " +
+    nowInfo.next.className +
+    (nowInfo.next.teacher ? "<br>" + nowInfo.next.teacher : "") +
+    (nowInfo.next.room ? "<br>Room " + nowInfo.next.room : "") +
+    "<br>" +
+    nowInfo.next.start +
+    " – " +
+    nowInfo.next.end +
+    "</p>";
 } else {
     const firstSchoolDay = new Date("2026-08-10");
     const todayOnly = new Date();
@@ -658,13 +656,15 @@ if (nowInfo.current) {
 
 if (nowInfo.current && nowInfo.next) {
     currentHTML +=
-        "<p><strong>Next:</strong> " +
-        nowInfo.next.className +
-        "<br>" +
-        nowInfo.next.start +
-        " – " +
-        nowInfo.next.end +
-        "</p>";
+    "<p><strong>Next:</strong> " +
+    nowInfo.next.className +
+    (nowInfo.next.teacher ? "<br>" + nowInfo.next.teacher : "") +
+    (nowInfo.next.room ? "<br>Room " + nowInfo.next.room : "") +
+    "<br>" +
+    nowInfo.next.start +
+    " – " +
+    nowInfo.next.end +
+    "</p>";
 }
 
 elenaCard.innerHTML = `

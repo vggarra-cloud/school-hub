@@ -411,7 +411,7 @@ function getElenaSchedule() {
 // ELENA RESOURCE ROTATION
 // =====================================================
 
-const ELENA_FIRST_SCHOOL_DAY = new Date("2026-08-10");
+const ELENA_FIRST_SCHOOL_DAY = new Date(2026, 7, 10);
 
 // Monday, August 10 is an A day.
 const ELENA_FIRST_RESOURCE_DAY = "A";
