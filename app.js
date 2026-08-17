@@ -123,7 +123,47 @@ function displayClassInfo(elementId, item) {
         return;
     }
 
-    let html = `<strong>${item.name}</strong>`;
+    function formatTime(time) {
+        if (!time) {
+            return "";
+        }
+
+        // Already formatted
+        if (/[AP]M/i.test(time)) {
+            return time;
+        }
+
+        const parts = time.split(":");
+        let hour = parseInt(parts[0], 10);
+        const minute = parts[1] || "00";
+
+        if (isNaN(hour)) {
+            return time;
+        }
+
+        const suffix = hour >= 12 ? "PM" : "AM";
+
+        if (hour === 0) {
+            hour = 12;
+        } else if (hour > 12) {
+            hour -= 12;
+        }
+
+        return `${hour}:${minute} ${suffix}`;
+    }
+
+    let emoji = "📚";
+
+    if (item.name && item.name.toLowerCase().includes("lunch")) {
+        emoji = "🍎";
+    }
+
+    const timeStart = formatTime(item.start);
+    const timeEnd = formatTime(item.end);
+
+    let html = "";
+
+    html += `<strong>${emoji} ${item.name}</strong>`;
 
     if (item.teacher) {
         html += `<br>${teacherHTML(item)}`;
@@ -133,9 +173,12 @@ function displayClassInfo(elementId, item) {
         html += `<br>Room ${item.room}`;
     }
 
+    if (timeStart && timeEnd) {
+        html += `<br>${timeStart} – ${timeEnd}`;
+    }
+
     element.innerHTML = html;
 }
-
 
 // ============================================
 // FULL SCHEDULE DISPLAY

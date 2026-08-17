@@ -41,11 +41,29 @@ body {
 .student-card,
 .today-card,
 .school-info {
-    background: #ffffff;
     border: 1px solid #dedede;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 20px;
     margin-bottom: 16px;
+}
+
+/* Student colors */
+.student-card:nth-of-type(1) {
+    background: #f0f7d8;
+}
+
+.student-card:nth-of-type(2) {
+    background: #eee4fb;
+}
+
+/* Today */
+.today-card {
+    background: #e5f3fb;
+}
+
+/* School information */
+.school-info {
+    background: #f7f7f7;
 }
 
 .student-card h2,
@@ -61,21 +79,25 @@ body {
    ========================= */
 
 .student-info {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    display: block;
     margin-bottom: 16px;
 }
 
 .student-info > div {
-    border: 1px solid #e4e4e4;
-    border-radius: 8px;
-    padding: 12px;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0 0 14px 0;
+    background: transparent;
+}
+
+.student-info > div:last-child {
+    margin-bottom: 0;
 }
 
 .student-info h3 {
-    margin: 0 0 6px;
-    font-size: 14px;
+    margin: 0 0 5px 0;
+    font-size: 16px;
     font-weight: 600;
 }
 
@@ -83,6 +105,15 @@ body {
     margin: 0;
     font-size: 16px;
     line-height: 1.4;
+}
+
+.student-info a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.student-info a:hover {
+    text-decoration: underline;
 }
 
 /* =========================

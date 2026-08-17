@@ -63,7 +63,7 @@ class SchoolHubHandler(SimpleHTTPRequestHandler):
 
 
 server = ThreadingHTTPServer(
-    ("localhost", 8000),
+    ("0.0.0.0", 8000),
     SchoolHubHandler
 )
 
