@@ -1,488 +1,75 @@
-// School Hub
-// Version 0.2
+// ============================================
+// SCHOOL HUB
+// Main dashboard logic
+// ============================================
 
-const today = getToday();
 
-const hour = today.getHours();
+// ============================================
+// DATE / TIME HELPERS
+// ============================================
 
-let greeting = "";
-
-if (hour < 12) {
-    greeting = "☀️ Good Morning, Victoria";
-}
-else if (hour < 18) {
-    greeting = "🌤️ Good Afternoon, Victoria";
-}
-else {
-    greeting = "🌙 Good Evening, Victoria";
+function getToday() {
+    return new Date();
 }
 
-document.getElementById("welcomeMessage").innerHTML = greeting;
-
-const todayCard = document.getElementById("todayCard");
-
-
-const dayName = today.toLocaleDateString("en-US", {
-    weekday: "long"
-});
-
-const fullDate = today.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-});
-
-todayCard.innerHTML = `
-<strong>${dayName}</strong><br><br>
-📅 ${fullDate}<br><br>
-🎒 Checking school calendar...
-`;
-
-
-getSchoolCalendar().then(function(calendarText) {
-    console.log("District calendar loaded!");
-    console.log(calendarText);
-});
-
-getSchoolCalendar().then(function(calendarText) {
-    const events = parseSchoolCalendar(calendarText);
-
-    console.log("School events found:", events);
-    console.log("Number of events:", events.length);
-});
-
-function formatCalendarDate(dateString) {
-    return new Date(
-        Number(dateString.substring(0, 4)),
-        Number(dateString.substring(4, 6)) - 1,
-        Number(dateString.substring(6, 8))
-    );
+function isWednesday(date) {
+    return date.getDay() === 3;
 }
 
-function getTodaysSchoolEvents(events) {
-    const today = new Date();
-
-    const todayString =
-        today.getFullYear().toString() +
-        String(today.getMonth() + 1).padStart(2, "0") +
-        String(today.getDate()).padStart(2, "0");
-
-    return events.filter(function(event) {
-        return event.start === todayString;
-    });
+function isWeekend(date) {
+    const day = date.getDay();
+    return day === 0 || day === 6;
 }
 
-getSchoolCalendar().then(function(calendarText) {
-    const events = parseSchoolCalendar(calendarText);
-    const todaysEvents = getTodaysSchoolEvents(events);
+function timeToMinutes(timeString) {
+    const [time, modifier] = timeString.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
 
-    console.log("Today's school events:", todaysEvents);
-});
-
-getSchoolCalendar().then(function(calendarText) {
-    const events = parseSchoolCalendar(calendarText);
-
-    events.forEach(function(event) {
-        event.type = categorizeSchoolEvent(event.title);
-    });
-
-    console.log("Categorized school events:", events);
-});
-
-function updateTodayCard(events) {
-    const todayEvents = getTodaysSchoolEvents(events);
-
-    const today = new Date();
-
-    const todayDisplay = today.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric"
-    });
-
-    const firstSchoolDay = new Date("2026-08-10");
-
-    const daysUntilSchool = Math.ceil(
-        (firstSchoolDay - today) / (1000 * 60 * 60 * 24)
-    );
-
-    let todayHTML = `
-        <p>
-            <strong>${todayDisplay}</strong><br>
-    `;
-
-    if (daysUntilSchool > 0) {
-        todayHTML += `
-            🎒 School starts in <strong>${daysUntilSchool} days</strong><br>
-            Monday, August 10
-        `;
-    } else {
-        todayHTML += `
-            🏫 School is in session
-        `;
+    if (modifier === "PM" && hours !== 12) {
+        hours += 12;
     }
 
-    todayHTML += `</p>`;
-
-    if (todayEvents.length > 0) {
-        todayHTML += `
-            <p>
-                <strong>🎉 Today's School Events:</strong><br>
-                ${todayEvents.map(function(event) {
-                    return "📌 " + event.title;
-                }).join("<br>")}
-            </p>
-        `;
+    if (modifier === "AM" && hours === 12) {
+        hours = 0;
     }
 
-    todayHTML += `
-        <details>
-            <summary>Transportation</summary>
-
-            <p><strong>Eddie</strong><br>
-            AM Pickup: <strong>6:55 AM</strong><br>
-            PM Dropoff: <strong>${eddiePMDropoff}</strong><br>
-            AM Bus: <strong>2447</strong><br>
-            PM Bus: <strong>2646</strong>
-            </p>
-
-            <p><strong>Elena</strong><br>
-            AM Pickup: <strong>7:47 AM</strong><br>
-            PM Dropoff: <strong>${elenaPMDropoff}</strong><br>
-            Bus: <strong>2456</strong>
-            </p>
-
-        </details>
-    `;
-
-    todayCard.innerHTML = todayHTML;
+    return hours * 60 + minutes;
 }
 
-getSchoolCalendar().then(function(calendarText) {
-    const events = parseSchoolCalendar(calendarText);
 
-    events.forEach(function(event) {
-        event.type = categorizeSchoolEvent(event.title);
-    });
+// ============================================
+// TODAY'S SCHEDULE
+// ============================================
 
-    updateTodayCard(events);
-    updateEddieCard(events);
-});
+function getEddieSchedule(date) {
+    return isWednesday(date)
+        ? EDDIE_WEDNESDAY_SCHEDULE
+        : EDDIE_REGULAR_SCHEDULE;
+}
+
+function getElenaSchedule(date) {
+    return isWednesday(date)
+        ? ELENA_WEDNESDAY_SCHEDULE
+        : ELENA_REGULAR_SCHEDULE;
+}
 
 
-// ==========================================
-// EDDIE DASHBOARD
-// ==========================================
+// ============================================
+// CURRENT + NEXT CLASS
+// ============================================
 
-function updateEddieCard(events) {
-    const eddieCard = document.querySelector(".card.eddie");
-
-    if (!eddieCard) {
-        return;
-    }
-
-    const today = getToday();
-    const schedule = getEddieSchedule(today);
-
-    const dayName = today.toLocaleDateString("en-US", {
-        weekday: "long"
-    });
-
-    // Determine whether today is Wednesday
-    const isWednesday = today.getDay() === 3;
-
-    // Get current time in minutes
+function getCurrentAndNext(schedule, now) {
     const currentMinutes =
-        today.getHours() * 60 + today.getMinutes();
-
-    function timeToMinutes(timeString) {
-        const parts = timeString.split(" ");
-        const time = parts[0];
-        const ampm = parts[1];
-
-        let [hours, minutes] = time.split(":").map(Number);
-
-        if (ampm === "PM" && hours !== 12) {
-            hours += 12;
-        }
-
-        if (ampm === "AM" && hours === 12) {
-            hours = 0;
-        }
-
-        return hours * 60 + minutes;
-    }
-
-    // Find what Eddie is doing right now
-    let currentPeriod = null;
-    let nextPeriod = null;
-
-    for (let i = 0; i < schedule.length; i++) {
-        const period = schedule[i];
-
-        const startMinutes = timeToMinutes(period.start);
-        const endMinutes = timeToMinutes(period.end);
-
-        if (
-            currentMinutes >= startMinutes &&
-            currentMinutes < endMinutes
-        ) {
-            currentPeriod = period;
-            nextPeriod = schedule[i + 1] || null;
-            break;
-        }
-
-        if (currentMinutes < startMinutes) {
-            nextPeriod = period;
-            break;
-        }
-    }
-
-
-let statusHTML = "";
-
-const firstSchoolDay = new Date("2026-08-10");
-firstSchoolDay.setHours(0, 0, 0, 0);
-
-const todayOnly = new Date(today);
-todayOnly.setHours(0, 0, 0, 0);
-
-// Before the first day of school
-if (todayOnly < firstSchoolDay) {
-
-    const firstPeriod = schedule[0];
-
-    statusHTML =
-        "<p><strong>🎒 School starts Monday, August 10</strong></p>" +
-        "<p><strong>First class:</strong> " +
-        firstPeriod.className +
-        "<br>" +
-       firstPeriod.teacher +
-"<br>" +
-"Room " + firstPeriod.room +
-"<br>" +
-firstPeriod.start +
-" – " +
-firstPeriod.end +
-        "</p>";
-
-} else if (currentPeriod) {
-
-    if (currentPeriod.period === "Lunch") {
-
-        statusHTML =
-            "<p><strong>🍎 Right now:</strong> Lunch</p>";
-
-    } else {
-
-        statusHTML =
-            "<p><strong>📚 Right now:</strong> " +
-            currentPeriod.className +
-            "<br>" +
-            currentPeriod.teacher +
-"<br>" +
-"Room " + currentPeriod.room +
-"<br>" +
-currentPeriod.start +
-" – " +
-currentPeriod.end +
-            "</p>";
-    }
-
-    if (nextPeriod) {
-
-        if (nextPeriod.period === "Lunch") {
-
-            statusHTML +=
-                "<p><strong>Next:</strong> 🍎 Lunch<br>" +
-                nextPeriod.start +
-                " – " +
-                nextPeriod.end +
-                "</p>";
-
-        } else {
-
-            statusHTML +=
-                "<p><strong>Next:</strong> " +
-                nextPeriod.className +
-                "<br>" +
-               nextPeriod.teacher +
-"<br>" +
-"Room " + nextPeriod.room +
-"<br>" +
-nextPeriod.start +
-" – " +
-nextPeriod.end +
-                "</p>";
-        }
-
-    } else {
-
-        statusHTML +=
-            "<p><strong>🏠 School day complete</strong></p>";
-    }
-
-} else if (nextPeriod) {
-
-    if (nextPeriod.period === "Lunch") {
-
-        statusHTML =
-            "<p><strong>Next:</strong> 🍎 Lunch<br>" +
-            nextPeriod.start +
-            " – " +
-            nextPeriod.end +
-            "</p>";
-
-    } else {
-
-        statusHTML =
-            "<p><strong>Next:</strong> " +
-            nextPeriod.className +
-" • " +
-nextPeriod.teacher +
-"<br>" +
-"Room " + nextPeriod.room +
-"<br>" +
-nextPeriod.start +
-" – " +
-nextPeriod.end +
-            "</p>";
-    }
-
-} else {
-
-    statusHTML =
-        "<p><strong>🏠 School day complete</strong></p>";
-}
-
-
-    // Build the full schedule for the dropdown
-    const scheduleHTML = schedule.map(function(period) {
-
-        if (period.period === "Lunch") {
-            return (
-                "<div>" +
-                "<strong>Lunch</strong> — " +
-                period.start +
-                "–" +
-                period.end +
-                "</div>"
-            );
-        }
-
-        return (
-            "<div>" +
-            "<strong>" +
-            period.period +
-            " — " +
-            period.start +
-            "–" +
-            period.end +
-            "</strong><br>" +
-            period.className +
-            "<br>" +
-            period.teacher +
-            " · Room " +
-            period.room +
-            "</div>"
-        );
-
-    }).join("<br>");
-const dayOfWeek = today.getDay();
-
-const dateString =
-    today.getFullYear().toString() +
-    String(today.getMonth() + 1).padStart(2, "0") +
-    String(today.getDate()).padStart(2, "0");
-
-const dayEvents = (events || []).filter(function(event) {
-    return event.start === dateString;
-});
-
-const noSchoolToday =
-    dayOfWeek === 0 ||
-    dayOfWeek === 6 ||
-    dayEvents.some(function(event) {
-        const title = event.title.toLowerCase();
-        return (
-            title.includes("no school") ||
-            title.includes("holiday") ||
-            title.includes("teacher planning") ||
-            title.includes("teacher workday") ||
-            title.includes("teacher pre-planning") ||
-            title.includes("winter break") ||
-            title.includes("spring break") ||
-            title.includes("thanksgiving break")
-        );
-    });
-
-if (noSchoolToday) {
-    eddieCard.innerHTML =
-        "<h2>Eddie</h2>" +
-        "<p>🏫 <strong>School is not in session</strong></p>" +
-        "<details>" +
-        "<summary>View full schedule</summary>" +
-        "<div style=\"margin-top: 12px;\">" +
-        scheduleHTML +
-        "</div>" +
-        "</details>";
-
-    return;
-}
-
-    const scheduleLabel = isWednesday
-        ? "Wednesday Early Release"
-        : "Regular Schedule";
-
-    eddieCard.innerHTML =
-        "<h2>Eddie</h2>" +
-        statusHTML +
-        "<details>" +
-        "<summary>View full schedule</summary>" +
-        "<div style='margin-top: 12px;'>" +
-        scheduleHTML +
-        "</div>" +
-        "</details>";
-}
-
-
-
-
-// =====================================================
-// ELENA DASHBOARD
-// =====================================================
-
-function getElenaCurrentAndNext(schedule, now) {
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        now.getHours() * 60 + now.getMinutes();
 
     let current = null;
     let next = null;
 
-    function toMinutes(timeString) {
-        const parts = timeString.split(" ");
-        const time = parts[0];
-        const ampm = parts[1];
-
-        const timeParts = time.split(":");
-        let hours = Number(timeParts[0]);
-        const minutes = Number(timeParts[1]);
-
-        if (ampm === "PM" && hours !== 12) {
-            hours += 12;
-        }
-
-        if (ampm === "AM" && hours === 12) {
-            hours = 0;
-        }
-
-        return hours * 60 + minutes;
-    }
-
     for (let i = 0; i < schedule.length; i++) {
         const item = schedule[i];
 
-        const start = toMinutes(item.start);
-        const end = toMinutes(item.end);
+        const start = timeToMinutes(item.start);
+        const end = timeToMinutes(item.end);
 
         if (currentMinutes >= start && currentMinutes < end) {
             current = item;
@@ -497,290 +84,642 @@ function getElenaCurrentAndNext(schedule, now) {
     }
 
     return {
-        current: current,
-        next: next
+        current,
+        next
     };
 }
-function updateElenaCard(events) {
-    const elenaCard = document.querySelector(".card.elena");
 
-    if (!elenaCard) {
+
+// ============================================
+// TEACHER LINKS
+// ============================================
+
+function teacherHTML(item) {
+    if (!item || !item.teacher) {
+        return "";
+    }
+
+    if (item.email) {
+        return `<a href="mailto:${item.email}">${item.teacher}</a>`;
+    }
+
+    return item.teacher;
+}
+
+
+// ============================================
+// CURRENT / NEXT DISPLAY
+// ============================================
+
+function displayClassInfo(elementId, item) {
+    const element = document.getElementById(elementId);
+
+    if (!element) {
         return;
     }
 
-    const today = new Date();
-    const dayOfWeek = today.getDay();
+    if (!item) {
+        element.innerHTML = "—";
+        return;
+    }
 
-    // Wednesday = early release, no resource
-    if (dayOfWeek === 3) {
-        elenaCard.innerHTML = `
-            <h2>Elena</h2>
-            <p><strong>Wednesday Early Release</strong></p>
-            <p>🏫 School ends at <strong>1:45 PM</strong></p>
-            <p>No Resource Class</p>
-
-            <details>
-                <summary>View regular schedule</summary>
-                <div class="schedule-details">
-                   ${getElenaSchedule().map(function(item) {
-    let teacherRoom = "";
+    let html = `<strong>${item.name}</strong>`;
 
     if (item.teacher) {
-        teacherRoom += item.teacher;
+        html += `<br>${teacherHTML(item)}`;
     }
 
     if (item.room) {
-        teacherRoom += " · Room " + item.room;
+        html += `<br>Room ${item.room}`;
     }
 
-    return "<div>" +
-        "<strong>" +
-        item.start + "–" + item.end +
-        "</strong>" +
-        "<br>" +
-        item.className +
-        (teacherRoom ? "<br>" + teacherRoom : "") +
-        "</div>";
-}).join("<br>")}
+    element.innerHTML = html;
+}
+
+
+// ============================================
+// FULL SCHEDULE DISPLAY
+// ============================================
+
+function displaySchedule(elementId, schedule) {
+    const container = document.getElementById(elementId);
+
+    if (!container) {
+        return;
+    }
+
+    if (!schedule || schedule.length === 0) {
+        container.innerHTML =
+            "<p>Schedule information unavailable.</p>";
+        return;
+    }
+
+    let html = "";
+
+    schedule.forEach(item => {
+        html += `
+            <div class="schedule-row">
+                <div class="schedule-time">
+                    ${item.start}–${item.end}
                 </div>
-            </details>
+
+                <div>
+                    <strong>${item.name}</strong>
         `;
 
-        return;
-    }
+        if (item.teacher) {
+            html += `<br>${teacherHTML(item)}`;
+        }
 
-    // Regular school day
-    let rotationLetter = "";
+        if (item.room) {
+            html += `<br>Room ${item.room}`;
+        }
 
-if (typeof getElenaResourceDay === "function") {
-    rotationLetter = getElenaResourceDay(events);
-}
-
-  let resource = "";
-
-if (rotationLetter) {
-    resource = getElenaResource(rotationLetter);
-
-    if (ELENA_RESOURCE_TEACHER[resource]) {
-        resource += " — " + ELENA_RESOURCE_TEACHER[resource];
-    }
-} else {
-    let nextSchoolDay = new Date();
-    nextSchoolDay.setDate(nextSchoolDay.getDate() + 1);
-
-    while (!isElenaSchoolDay(nextSchoolDay, events)) {
-        nextSchoolDay.setDate(nextSchoolDay.getDate() + 1);
-    }
-
-const nextResource = getElenaResourceDay(events, nextSchoolDay);
-const nextResourceName = ELENA_RESOURCE_ROTATION[nextResource] || "";
-const nextTeacher = ELENA_RESOURCE_TEACHER[nextResourceName] || "";
-
-    resource =
-        "Starts " +
-        nextSchoolDay.toLocaleDateString("en-US", {
-            weekday: "long"
-        }) +
-        " – " +
-        nextResourceName;
-
-    if (nextTeacher) {
-        resource += " — " + nextTeacher;
-    }
-}
-
-// Weekend — school is not in session
-if (dayOfWeek === 0 || dayOfWeek === 6) {
-    elenaCard.innerHTML = `
-        <h2>Elena</h2>
-        <p>🏫 <strong>School is not in session</strong></p>
-
-        <details>
-            <summary>View full schedule</summary>
-            <div class="schedule-details">
-                ${getElenaSchedule().map(function(item) {
-    return "<div>" +
-    "<strong>" + item.start + " — " + item.end + "</strong><br>" +
-    item.className +
-    (item.teacher ? "<br>" + item.teacher : "") +
-    (item.room ? " • Room " + item.room : "") +
-    "</div>";
-}).join("<br>")}
+        html += `
+                </div>
             </div>
-        </details>
-    `;
-    return;
-}
-
-const elenaSchedule = getElenaSchedule();
-const nowInfo = getElenaCurrentAndNext(elenaSchedule, new Date());
-
-let currentHTML = "";
-
-if (nowInfo.current) {
-    currentHTML =
-    "<p><strong>📚 Right now:</strong> " +
-    nowInfo.current.className +
-    (nowInfo.current.teacher ? "<br>" + nowInfo.current.teacher : "") +
-    (nowInfo.current.room ? "<br>Room " + nowInfo.current.room : "") +
-    "<br>" +
-    nowInfo.current.start +
-    " – " +
-    nowInfo.current.end +
-    "</p>";
-} else if (nowInfo.next) {
-    currentHTML =
-    "<p><strong>📚 Next:</strong> " +
-    nowInfo.next.className +
-    (nowInfo.next.teacher ? "<br>" + nowInfo.next.teacher : "") +
-    (nowInfo.next.room ? "<br>Room " + nowInfo.next.room : "") +
-    "<br>" +
-    nowInfo.next.start +
-    " – " +
-    nowInfo.next.end +
-    "</p>";
-} else {
-    const firstSchoolDay = new Date("2026-08-10");
-    const todayOnly = new Date();
-    todayOnly.setHours(0, 0, 0, 0);
-
-    if (todayOnly < firstSchoolDay) {
-        currentHTML =
-            "<p><strong>🎒 School starts Monday, August 10</strong></p>" +
-            "<p>🎵 First resource: Music (A Day)</p>";
-    } else {
-        currentHTML =
-            "<p><strong>🏠 School day complete</strong></p>";
-    }
-}
-
-if (nowInfo.current && nowInfo.next) {
-    currentHTML +=
-    "<p><strong>Next:</strong> " +
-    nowInfo.next.className +
-    (nowInfo.next.teacher ? "<br>" + nowInfo.next.teacher : "") +
-    (nowInfo.next.room ? "<br>Room " + nowInfo.next.room : "") +
-    "<br>" +
-    nowInfo.next.start +
-    " – " +
-    nowInfo.next.end +
-    "</p>";
-}
-
-elenaCard.innerHTML = `
-    <h2>Elena</h2>
-
-    <p><strong>Today's Resource:</strong> ${resource}</p>
-
-    ${currentHTML}
-
-    <details>
-        <summary>View full schedule</summary>
-        <div class="schedule-details">
-            ${getElenaSchedule().map(function(item) {
-    let details = "";
-
-    if (item.teacher) {
-        details += "<br>" + item.teacher;
-    }
-
-    if (item.room) {
-        details += "<br>Room " + item.room;
-    }
-
-    return "<p><strong>" +
-        item.className +
-        "</strong>" +
-        details +
-        "<br>" +
-        item.start +
-        " – " +
-        item.end +
-        "</p>";
-}).join("")}
-        </div>
-    </details>
-`;
-}
-
-getSchoolCalendar().then(function(calendarText) {
-    const events = parseSchoolCalendar(calendarText);
-
-    events.forEach(function(event) {
-        event.type = categorizeSchoolEvent(event.title);
+        `;
     });
 
-    updateElenaCard(events);
-});
+    container.innerHTML = html;
+}
 
 
-// BUS INFORMATION
-const busToday = new Date();
-const isWednesday = busToday.getDay() === 3;
+// ============================================
+// EDDIE FULL SCHEDULE
+// ============================================
 
-const eddiePMPickup = isWednesday ? "12:50 PM" : "1:50 PM";
-const eddiePMDropoff = isWednesday ? "1:32 PM" : "2:32 PM";
+function buildEddieSchedule(date) {
+    const bellSchedule = getEddieSchedule(date);
 
-const elenaPMPickup = isWednesday ? "1:45 PM" : "2:45 PM";
-const elenaPMDropoff = isWednesday ? "2:22 PM" : "3:22 PM";
+    return bellSchedule.map(block => {
 
-todayCard.innerHTML = `
-<details>
-<summary>Transportation</summary>
+        if (block.name === "Lunch") {
+            return {
+                ...block
+            };
+        }
 
-<p><strong>Eddie</strong><br>
-AM Pickup: <strong>6:55 AM</strong><br>
-PM Dropoff: <strong>${eddiePMDropoff}</strong><br>
-AM Bus: <strong>2447</strong><br>
-PM Bus: <strong>2646</strong>
-</p>
+        const periodNumber = Number(
+            block.name.replace(/\D/g, "")
+        );
 
-<p><strong>Elena</strong><br>
-AM Pickup: <strong>7:47 AM</strong><br>
-PM Dropoff: <strong>${elenaPMDropoff}</strong><br>
-Bus: <strong>2456</strong>
-</p>
+        const classInfo = EDDIE_CLASSES.find(
+            course => course.period === periodNumber
+        );
 
-</details>
-`;
+        return {
+            ...block,
+            ...(classInfo || {})
+        };
+    });
+}
 
 
-const todayDate = new Date();
+// ============================================
+// ELENA FULL SCHEDULE
+// ============================================
 
-const todayDisplay = todayDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric"
-});
+function buildElenaSchedule(date) {
+    return getElenaSchedule(date);
+}
 
-const firstSchoolDay = new Date("2026-08-10");
-const daysUntilSchool = Math.ceil(
-    (firstSchoolDay - todayDate) / (1000 * 60 * 60 * 24)
-);
 
-let todayHeader = `
-<p>
-<strong>${todayDisplay}</strong><br>
-🎒 School starts in <strong>${daysUntilSchool} days</strong><br>
-Monday, August 10
-</p>
-`;
+// ============================================
+// ELENA RESOURCE ROTATION
+// ============================================
+//
+// Anchor:
+// August 10, 2026 = A Day
+//
+// Rules:
+// - Regular school days advance the rotation.
+// - Wednesday does NOT advance.
+// - Weekends do NOT advance.
+// - Student holidays / no-school days do NOT advance.
+// - Wednesday has no resource.
+// - After E comes A.
+//
 
-todayCard.innerHTML = todayHeader + todayCard.innerHTML;
+function getElenaResourceLetter(date) {
+    const anchor = new Date(2026, 7, 10);
 
-getSchoolCalendar().then(function(calendarText) {
-    const events = parseSchoolCalendar(calendarText);
-    const todaysEvents = getTodaysSchoolEvents(events);
+    const current = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+    );
 
-    if (todaysEvents.length > 0) {
-        const eventList = todaysEvents.map(function(event) {
-            return "🎉 " + event.title;
-        }).join("<br>");
+    if (current < anchor) {
+        return null;
+    }
 
-        todayCard.innerHTML += `
-        <hr>
-        <p><strong>🎉 Special Events</strong><br>
-        ${eventList}</p>
+    // Today itself cannot have a resource on Wednesday.
+    if (isWednesday(current)) {
+        return null;
+    }
+
+    // Count how many resource-advancing school days
+    // have occurred after the anchor.
+    let advancementCount = 0;
+
+    const cursor = new Date(anchor);
+
+    while (cursor < current) {
+        const day = cursor.getDay();
+
+        const weekend =
+            day === 0 || day === 6;
+
+        const wednesday =
+            day === 3;
+
+        const noSchool =
+            isNoSchoolDay(cursor);
+
+        if (!weekend && !wednesday && !noSchool) {
+            advancementCount++;
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+    }
+
+    const letters = ["A", "B", "C", "D", "E"];
+
+    return letters[advancementCount % letters.length];
+}
+
+
+function getElenaResource(date) {
+    // No resource on weekends.
+    if (isWeekend(date)) {
+        return null;
+    }
+
+    // No resource on Wednesday.
+    if (isWednesday(date)) {
+        return null;
+    }
+
+    // No resource on a student holiday/no-school day.
+    if (isNoSchoolDay(date)) {
+        return null;
+    }
+
+    const letter = getElenaResourceLetter(date);
+
+    if (!letter) {
+        return null;
+    }
+
+    return ELENA_RESOURCE_ROTATION[letter] || null;
+}
+
+
+// ============================================
+// RESOURCE DISPLAY
+// ============================================
+
+function displayElenaResource(date) {
+    const element =
+        document.getElementById("elena-resource");
+
+    if (!element) {
+        return;
+    }
+
+    const resource =
+        getElenaResource(date);
+
+    if (!resource) {
+        element.innerHTML = "None";
+        return;
+    }
+
+    let html =
+        `<strong>${resource.name}</strong>`;
+
+    if (resource.teacher) {
+        html += "<br>";
+
+        if (resource.email) {
+            html += `
+                <a href="mailto:${resource.email}">
+                    ${resource.teacher}
+                </a>
+            `;
+        } else {
+            html += resource.teacher;
+        }
+    }
+
+    element.innerHTML = html;
+}
+
+
+// ============================================
+// BUS DISPLAY
+// ============================================
+
+function displayBusSchedule(elementId, busData, busNumbers, date) {
+    const element =
+        document.getElementById(elementId);
+
+    if (!element) {
+        return;
+    }
+
+    const times = isWednesday(date)
+        ? busData.wednesday
+        : busData.regular;
+
+    const amBus =
+        isWednesday(date)
+            ? busNumbers.am
+            : busNumbers.am;
+
+    const pmBus =
+        isWednesday(date)
+            ? busNumbers.pm
+            : busNumbers.pm;
+
+    element.innerHTML = `
+        <p>
+            <strong>AM pickup:</strong>
+            ${times.pickup}
+        </p>
+
+        <p>
+            <strong>PM drop-off:</strong>
+            ${times.dropoff}
+        </p>
+
+        <p>
+            <strong>Bus:</strong>
+            ${amBus}${amBus !== pmBus ? ` AM / ${pmBus} PM` : ""}
+        </p>
+    `;
+}
+
+
+// ============================================
+// TODAY DISPLAY
+// ============================================
+
+function displayToday(date) {
+    const dateElement =
+        document.getElementById("today-date");
+
+    const earlyReleaseElement =
+        document.getElementById("early-release");
+
+    if (!dateElement || !earlyReleaseElement) {
+        return;
+    }
+
+    const dateText =
+        date.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        });
+
+    dateElement.textContent = dateText;
+
+    if (isWednesday(date)) {
+        earlyReleaseElement.textContent =
+            "Early Release Day";
+    } else {
+        earlyReleaseElement.textContent = "";
+    }
+}
+
+
+// ============================================
+// TODAY'S CALENDAR EVENTS
+// ============================================
+
+function displaySchoolEvents(date) {
+    const element =
+        document.getElementById("school-events");
+
+    if (!element) {
+        return;
+    }
+
+    const events = getEventsForDate(date);
+    const noSchool = isNoSchoolDay(date);
+    const wednesday = isWednesday(date);
+
+    let html = "";
+
+    if (noSchool) {
+        html += `
+            <p>
+                <strong>Student Holiday</strong>
+            </p>
+            <p>No school.</p>
         `;
     }
-});
+
+    if (wednesday && !noSchool) {
+        html += `
+            <p>
+                <strong>Early Release Day</strong>
+            </p>
+        `;
+    }
+
+    if (events.length) {
+        html += `
+            <p>
+                <strong>What's happening at school</strong>
+            </p>
+        `;
+
+        events.forEach(event => {
+            html += `
+                <p>
+                    ${event.summary || "School event"}
+            `;
+
+            if (event.location) {
+                html += `<br>${event.location}`;
+            }
+
+            html += `
+                </p>
+            `;
+        });
+    } else if (!noSchool) {
+        html += `
+            <p>
+                <strong>What's happening at school</strong>
+            </p>
+            <p>No events on the school calendar today.</p>
+        `;
+    }
+
+    element.innerHTML = html;
+}
+
+
+// ============================================
+// SCHOOL INFORMATION
+// ============================================
+
+function displaySchoolInfo() {
+    const mason = SCHOOLS.mason;
+    const gamble = SCHOOLS.gamble;
+
+    document.getElementById("mason-info").innerHTML = `
+        <p>
+            <strong>Website:</strong>
+            <a href="${mason.website}" target="_blank">
+                ${mason.website}
+            </a>
+        </p>
+
+        <p>
+            <strong>Email:</strong>
+            <a href="mailto:${mason.email}">
+                ${mason.email}
+            </a>
+        </p>
+
+        <p>
+            <strong>Phone:</strong>
+            <a href="tel:${mason.phone}">
+                ${mason.phone}
+            </a>
+        </p>
+
+        <p>
+            <strong>Address:</strong><br>
+            207 Mason Manatee Way<br>
+            St. Augustine, FL 32086
+        </p>
+
+        <p>
+            <strong>School Hours</strong><br>
+            Regular: ${mason.hours.regular}<br>
+            Wednesday: ${mason.hours.wednesday}
+        </p>
+
+        <p>
+            <strong>Drop-off / Tardy</strong><br>
+            Drop-off: ${mason.arrival.dropoff}<br>
+            Tardy: ${mason.arrival.tardy}
+        </p>
+
+        <p>
+            <strong>Forms:</strong>
+            <a href="${mason.forms}" target="_blank">
+                ParentSquare Forms
+            </a>
+        </p>
+    `;
+
+    document.getElementById("gamble-info").innerHTML = `
+        <p>
+            <strong>Website:</strong>
+            <a href="${gamble.website}" target="_blank">
+                ${gamble.website}
+            </a>
+        </p>
+
+        <p>
+            <strong>Email:</strong>
+            <a href="mailto:${gamble.email}">
+                ${gamble.email}
+            </a>
+        </p>
+
+        <p>
+            <strong>Phone:</strong>
+            <a href="tel:${gamble.phone}">
+                ${gamble.phone}
+            </a>
+        </p>
+
+        <p>
+            <strong>Address:</strong><br>
+            6250 US 1 South<br>
+            St. Augustine, FL 32086
+        </p>
+
+        <p>
+            <strong>School Hours</strong><br>
+            Regular: ${gamble.hours.regular}<br>
+            Wednesday: ${gamble.hours.wednesday}
+        </p>
+
+        <p>
+            <strong>Drop-off / Tardy</strong><br>
+            Drop-off: ${gamble.arrival.dropoff}<br>
+            Tardy: ${gamble.arrival.tardy}
+        </p>
+
+        <p>
+            <strong>Forms:</strong>
+            <a href="${gamble.forms}" target="_blank">
+                ParentSquare Forms
+            </a>
+        </p>
+    `;
+}
+
+
+// ============================================
+// INITIALIZE SCHOOL HUB
+// ============================================
+
+async function initSchoolHub() {
+
+    // Calendar must load first because
+    // Elena's resource rotation depends on
+    // knowing school holidays.
+    try {
+        await loadSchoolCalendar();
+    } catch (error) {
+        console.error(
+            "School calendar failed to load:",
+            error
+        );
+    }
+
+    const now = new Date();
+    const today = getToday();
+
+   const eddieSchedule =
+    buildEddieSchedule(today);
+
+    const elenaSchedule =
+        getElenaSchedule(today);
+
+    const eddieInfo =
+        getCurrentAndNext(
+            eddieSchedule,
+            now
+        );
+
+    const elenaInfo =
+        getCurrentAndNext(
+            elenaSchedule,
+            now
+        );
+
+    // Current / Next
+    displayClassInfo(
+        "eddie-current",
+        eddieInfo.current
+    );
+
+    displayClassInfo(
+        "eddie-next",
+        eddieInfo.next
+    );
+
+    displayClassInfo(
+        "elena-current",
+        elenaInfo.current
+    );
+
+    displayClassInfo(
+        "elena-next",
+        elenaInfo.next
+    );
+
+    // Full schedules
+    displaySchedule(
+        "eddie-schedule",
+        buildEddieSchedule(today)
+    );
+
+    displaySchedule(
+        "elena-schedule",
+        buildElenaSchedule(today)
+    );
+
+    // Resource
+    displayElenaResource(today);
+
+    // Bus
+    displayBusSchedule(
+        "eddie-bus",
+        EDDIE_BUS,
+        {
+            am: "2447",
+            pm: "2646"
+        },
+        today
+    );
+
+    displayBusSchedule(
+        "elena-bus",
+        ELENA_BUS,
+        {
+            am: "2456",
+            pm: "2456"
+        },
+        today
+    );
+
+    // Today
+    displayToday(today);
+    displaySchoolEvents(today);
+
+    // School info
+    displaySchoolInfo();
+}
+
+
+// ============================================
+// START AFTER PAGE LOAD
+// ============================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initSchoolHub
+);
