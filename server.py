@@ -1,3 +1,5 @@
+import os
+
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.request import Request, urlopen
 
@@ -63,7 +65,7 @@ class SchoolHubHandler(SimpleHTTPRequestHandler):
 
 
 server = ThreadingHTTPServer(
-    ("0.0.0.0", 8000),
+    ("0.0.0.0", int(os.environ.get("PORT", 8000))),
     SchoolHubHandler
 )
 

@@ -3,7 +3,7 @@
 // Calendar reader
 // ============================================
 
-const CALENDAR_ENDPOINT = "/school-calendar";
+const CALENDAR_ENDPOINT = "school-calendar.ics";
 
 let schoolCalendarEvents = [];
 let schoolCalendarLoaded = false;

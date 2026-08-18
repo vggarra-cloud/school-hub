@@ -460,15 +460,14 @@ function displayToday(date) {
         return;
     }
 
-    const dateText =
-        date.toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric"
-        });
+   const dateText =
+    date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "numeric",
+        day: "numeric"
+    }).replace(",", "");
 
-    dateElement.textContent = dateText;
+dateElement.innerHTML = `<strong>${dateText}</strong>`;
 
     if (isWednesday(date)) {
         earlyReleaseElement.textContent =
@@ -483,70 +482,152 @@ function displayToday(date) {
 // TODAY'S CALENDAR EVENTS
 // ============================================
 
+// ============================================================
+// WEEKLY CALENDAR EVENTS
+// ============================================================
+
 function displaySchoolEvents(date) {
-    const element =
-        document.getElementById("school-events");
+    const element = document.getElementById("school-events");
 
     if (!element) {
         return;
     }
 
-    const events = getEventsForDate(date);
-    const noSchool = isNoSchoolDay(date);
-    const wednesday = isWednesday(date);
+    const dayOfWeek = date.getDay();
+
+    // Find Monday of the current school week.
+    // On Saturday/Sunday, show the upcoming Monday-Friday.
+    let monday = new Date(date);
+
+    if (dayOfWeek === 0) {
+        monday.setDate(date.getDate() + 1);
+    } else if (dayOfWeek === 6) {
+        monday.setDate(date.getDate() + 2);
+    } else {
+        monday.setDate(date.getDate() - (dayOfWeek - 1));
+    }
+
+    monday.setHours(0, 0, 0, 0);
+
+    const todayKey = date.toDateString();
 
     let html = "";
 
-    if (noSchool) {
-        html += `
-            <p>
-                <strong>Student Holiday</strong>
-            </p>
-            <p>No school.</p>
-        `;
-    }
+   // ========================================================
+// TODAY'S EVENTS
+// ========================================================
 
-    if (wednesday && !noSchool) {
-        html += `
-            <p>
-                <strong>Early Release Day</strong>
-            </p>
-        `;
-    }
+const todayEvents = getEventsForDate(date);
+const todayNoSchool = isNoSchoolDay(date);
+const todayWednesday = isWednesday(date);
 
-    if (events.length) {
+html += `
+    <div class="today-events">
+`;
+    if (todayNoSchool) {
         html += `
-            <p>
-                <strong>What's happening at school</strong>
-            </p>
+            <p><strong>🏫 Student Holiday</strong></p>
+            <p>No school</p>
         `;
-
-        events.forEach(event => {
+    } else {
+        if (todayWednesday) {
             html += `
-                <p>
-                    ${event.summary || "School event"}
+                <p>Early Release Day</p>
             `;
+        }
 
-            if (event.location) {
-                html += `<br>${event.location}`;
+        if (todayEvents.length) {
+            todayEvents.forEach(event => {
+                html += `
+                    <p>
+                        ${event.summary || "School event"}
+                `;
+
+                if (event.location) {
+                    html += `<br>${event.location}`;
+                }
+
+                html += `</p>`;
+            });
+        } else if (!todayWednesday) {
+            html += `
+                <p>No events</p>
+            `;
+        }
+    }
+
+    html += `
+        </div>
+
+        <hr>
+
+        <div class="week-events">
+            <h2 class="school-events-section-title">This Week</h2>
+    `;
+
+    // ========================================================
+    // REST OF WEEK
+    // ========================================================
+
+    for (let i = 1; i < 5; i++) {
+        const currentDate = new Date(monday);
+        currentDate.setDate(monday.getDate() + i);
+
+        const events = getEventsForDate(currentDate);
+        const noSchool = isNoSchoolDay(currentDate);
+        const wednesday = isWednesday(currentDate);
+
+        html += `
+            <div class="week-day">
+                <p>
+                    <strong>${currentDate.toLocaleDateString("en-US", {
+                        weekday: "long"
+                    })} ${currentDate.getMonth() + 1}/${currentDate.getDate()}</strong>
+                </p>
+        `;
+
+        if (noSchool) {
+            html += `
+                <p>🏫 Student Holiday — No school</p>
+            `;
+        } else {
+            if (wednesday) {
+                html += `
+                    <p>Early Release Day</p>
+                `;
             }
 
-            html += `
-                </p>
-            `;
-        });
-    } else if (!noSchool) {
+            if (events.length) {
+                events.forEach(event => {
+                    html += `
+                        <p>
+                            ${event.summary || "School event"}
+                    `;
+
+                    if (event.location) {
+                        html += `<br>${event.location}`;
+                    }
+
+                    html += `</p>`;
+                });
+            } else if (!wednesday) {
+                html += `
+                    <p>No events</p>
+                `;
+            }
+        }
+
         html += `
-            <p>
-                <strong>What's happening at school</strong>
-            </p>
-            <p>No events on the school calendar today.</p>
+            </div>
         `;
     }
+
+    html += `
+        </div>
+    `;
 
     element.innerHTML = html;
 }
-
 
 // ============================================
 // SCHOOL INFORMATION

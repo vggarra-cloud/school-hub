@@ -145,7 +145,7 @@ details > div {
    ========================= */
 
 #today-date {
-    margin: 0 0 10px;
+    margin: 0 0 8px;
     font-size: 16px;
 }
 
@@ -238,4 +238,81 @@ details > div {
     .page-header h1 {
         font-size: 26px;
     }
+}
+
+/* ================================
+   WEEKLY SCHOOL EVENTS
+   ================================ */
+
+#school-events .today-events p,
+#school-events .week-events p {
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+}
+
+#school-events .today-events {
+    margin-bottom: 25px;
+}
+
+#school-events .week-events > p:first-child {
+    margin-bottom: 10px;
+}
+
+#school-events .week-day {
+    margin-bottom: 14px;
+}
+
+#school-events .week-day:last-child {
+    margin-bottom: 0;
+}
+
+/* =========================================
+   SCHOOL EVENTS — SECTION TITLES
+   ========================================= */
+
+.school-events-section-title,
+.today-card h2 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+/* Today's date + weekly dates */
+#today-date,
+.week-day-date {
+    margin: 0 0 5px 0;
+    line-height: 1.4;
+}
+
+/* Events stay regular weight */
+#school-events p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Space between each day */
+.week-day + .week-day {
+    margin-top: 20px;
+}
+
+#today-date {
+    margin-bottom: 2px;
+}
+
+#today-date + #early-release {
+    margin-bottom: 0;
+}
+
+#school-events {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+#early-release:empty {
+    display: none;
+}
+
+.week-events {
+    margin-top: 25px;
 }
