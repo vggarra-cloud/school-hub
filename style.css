@@ -41,7 +41,7 @@ body {
 .student-card,
 .today-card,
 .school-info {
-    border: 1px solid #dedede;
+    border: 1px solid #000;
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 16px;
@@ -121,7 +121,7 @@ body {
    ========================= */
 
 details {
-    border-top: 1px solid #e4e4e4;
+    border-top: 1px solid #000;
 }
 
 details + details {
@@ -165,7 +165,7 @@ details > div {
    ========================= */
 
 .school-info details {
-    border-top: 1px solid #e4e4e4;
+    border-top: 1px solid #000;
 }
 
 .school-info details:first-of-type {
@@ -315,4 +315,12 @@ details > div {
 
 .week-events {
     margin-top: 25px;
+}
+
+.school-events-section-title,
+.today-card h2 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
 }

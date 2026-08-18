@@ -569,7 +569,7 @@ html += `
     // REST OF WEEK
     // ========================================================
 
-    for (let i = 1; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
         const currentDate = new Date(monday);
         currentDate.setDate(monday.getDate() + i);
 
