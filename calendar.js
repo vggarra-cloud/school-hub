@@ -3,7 +3,7 @@
 // Calendar reader
 // ============================================
 
-const CALENDAR_ENDPOINT = "school-calendar.ics";
+const CALENDAR_ENDPOINT = "https://aged-leaf-3b30.vggarra.workers.dev/";
 
 let schoolCalendarEvents = [];
 let schoolCalendarLoaded = false;
@@ -239,18 +239,20 @@ function getEventRange(event) {
 // ============================================
 
 function eventOccursOnDate(event, date) {
-    const range = getEventRange(event);
+  const range = getEventRange(event);
 
-    if (!range) {
-        return false;
-    }
+  if (!range) {
+    return false;
+  }
 
-    const day = startOfDay(date);
+  const dayStart = startOfDay(date);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
 
-    return (
-        day >= startOfDay(range.start) &&
-        day < startOfDay(range.end)
-    );
+  return (
+    dayStart < range.end &&
+    dayEnd > range.start
+  );
 }
 
 
